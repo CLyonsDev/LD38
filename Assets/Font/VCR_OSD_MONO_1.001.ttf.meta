@@ -1,6 +1,6 @@
 fileFormatVersion: 2
-guid: 45fc98241744e6240ac73497e8c7093a
-timeCreated: 1492910440
+guid: acaca81736bae2342886861f7f48846a
+timeCreated: 1492916466
 licenseType: Free
 TrueTypeFontImporter:
   serializedVersion: 4
@@ -9,9 +9,9 @@ TrueTypeFontImporter:
   characterSpacing: 0
   characterPadding: 1
   includeFontData: 1
-  fontName: Pixeled
+  fontName: VCR OSD Mono
   fontNames:
-  - Pixeled
+  - VCR OSD Mono
   fallbackFontReferences: []
   customCharacters: 
   fontRenderingMode: 0

@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class Dialogue : MonoBehaviour {
@@ -13,44 +14,134 @@ public class Dialogue : MonoBehaviour {
         -x- = This is the end of the line.
     */
 
+    public static Dialogue _instance;
+
     public string[] lines;
-    public List<char> charArr = new List<char>();
+    //public List<char> charArr = new List<char>();
     private string currentLine = string.Empty;
 
-    private float characterDelay = 0.1f;
+    private float characterDelay;
+
+    private float normalCharacterDelay = 0.025f;
+    private float fastCharacterDelay = 0.005f;
+    private float autoAdvanceCharacterDelay = 0.04f;
+    private float autoAdvanceDelay = 0.5f;
 
     public int index = 0;
+
+    public WorldManager world;
 
     public GameObject dialogueContainer;
     public Text dialogueTextZone;
     public Text charNameTextZone;
+    public Text continueText;
+    public Image portrait;
 
-    private bool done = false;
+    private bool endOfLine = false;
+    private bool finishedTyping = false;
+    [HideInInspector]
+    public bool convoInProgress = false;
+    private bool autoAdvance = false;
 
+    void Awake()
+    {
+        if(_instance == null)
+        {
+            _instance = this;
+        }
+        else
+        {
+            Destroy(this);
+        }
+    }
 
 	// Use this for initialization
 	void Start () {
+        characterDelay = normalCharacterDelay;
         //Debug.Log(this.transform.root.name);
-        //StartDialogue(0);
-        CheckIfEndOfLine(charArr);
+        StartDialogue(0, false);
+        //CheckIfEndOfLine(charArr);
 
     }
 	
 	// Update is called once per frame
 	void Update () {
-		if(done)
+        if (finishedTyping)
         {
-            if(Input.anyKeyDown)
-                dialogueContainer.SetActive(false);
+            if(!autoAdvance)
+                continueText.enabled = true;
+
+            if (Input.anyKeyDown && !autoAdvance)
+            {
+                if (endOfLine)
+                {
+                    convoInProgress = false;
+                    dialogueContainer.SetActive(false);
+                    TimeManager._timeManager.Unpause();
+
+                    if(world.win || world.lose)
+                    {
+                        SceneManager.LoadScene(0);
+                    }
+                }
+                else
+                {
+                    StartDialogue(index + 1, false);
+                }
+            }else if(autoAdvance)
+            {
+                if (endOfLine)
+                {
+                    convoInProgress = false;
+                    dialogueContainer.SetActive(false);
+                }
+                else
+                {
+                    StartDialogue(index + 1, true);
+                }
+            }
+        }
+        else
+        {
+            if(!autoAdvance)
+            {
+                if (Input.anyKey)
+                {
+                    characterDelay = fastCharacterDelay;
+                }
+                else
+                {
+                    characterDelay = normalCharacterDelay;
+                }
+            }         
         }
     }
 
-    public void StartDialogue(int desiredIndex)
+    public void StartDialogue(int desiredIndex, bool autoadvance)
     {
+        Debug.LogWarning("Starting line at index" + desiredIndex);
         dialogueContainer.SetActive(true);
-        done = false;
+
+        autoAdvance = autoadvance;
+        continueText.enabled = false;
+        convoInProgress = true;
+        endOfLine = false;
+        finishedTyping = false;
+
         index = desiredIndex;
         currentLine = lines[index];
+        characterDelay = normalCharacterDelay;
+
+        if(!autoadvance)
+        {
+            characterDelay = normalCharacterDelay;
+            TimeManager._timeManager.Pause();
+        }
+        else
+        {
+            characterDelay = autoAdvanceCharacterDelay;
+        }
+
         StartCoroutine(TypeLine());
     }
 
@@ -58,50 +149,70 @@ public class Dialogue : MonoBehaviour {
     {
         Debug.Log("TypeLine");
 
+        string finalLine = string.Empty;
         string line = string.Empty;
         string name = string.Empty;
 
         List<char> chars = new List<char>();
         chars.AddRange(currentLine.ToCharArray());
 
-        int nameChars = ParseName(chars);
+        finalLine = currentLine;
 
-        for (int j = 0; j < nameChars; j++)
-        {
-            if (j > 1 || j < nameChars - 2)
-            {
-                name += chars[j];
-            }
-        }
-
-        chars.RemoveRange(0, nameChars);
-        
 
         bool isEndOfLine = CheckIfEndOfLine(chars);
         if (isEndOfLine)
         {
-            done = true;
+            endOfLine = true;
             for (int j = 0; j < 3; j++)
             {
                 chars.RemoveAt(chars.Count - 1);
             }
         }
-        else
+
+        int nameChars = ParseName(chars);
+
+        for (int j = 0; j < nameChars; j++)
         {
-            StartDialogue(index + 1);
+            if (j > 1 && j < nameChars - 1)
+            {
+                name += chars[j];
+            }
         }
 
+        chars.RemoveRange(0, nameChars + 1);
+        charNameTextZone.text = name;
 
-        int i = 0;
-
-        while(line.ToString() != currentLine)
+        for (int i = 0; i < chars.Count; i++)
         {
-            Debug.Log("Typing a char.");
+            finalLine += chars[i];
+        }
+
+        SetPortrait(name.ToLower());
+
+
+        //int loc = 0;
+        for (int i = 0; i < chars.Count; i++)
+        {
+            //Debug.Log(line.ToString() + " vs " + finalLine);
+            //Debug.Log("Typing a char.");
             line += chars[i];
-            i++;
             dialogueTextZone.text = line.ToString();
             yield return new WaitForSeconds(characterDelay);
         }
+
+        if(autoAdvance)
+        {
+            yield return new WaitForSeconds(autoAdvanceDelay);
+        }
+
+        finishedTyping = true;
+    }
+
+    private void SetPortrait(string name)
+    {
+        //Debug.Log("Loading " + name);
+        Sprite s = Resources.Load(name, typeof(Sprite)) as Sprite;
+        portrait.sprite = s;
     }
 
     private int ParseName(List<char> chars)
@@ -118,7 +229,6 @@ public class Dialogue : MonoBehaviour {
                 parseComplete = true;
             }
         }
-
 
         return num;
     }

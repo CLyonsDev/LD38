@@ -17,7 +17,6 @@ public class TimeManager : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-        Pause();
 	}
 	
 	// Update is called once per frame

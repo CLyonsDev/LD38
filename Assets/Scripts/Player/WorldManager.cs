@@ -18,8 +18,16 @@ public class WorldManager : MonoBehaviour {
     public bool inGoldilocksZone = false;
 
     [HideInInspector]
+    public bool win = false;
+    [HideInInspector]
+    public bool lose = false;
+    [HideInInspector]
+    public bool SECRETWIN = false;
+
+    [HideInInspector]
     public int pop = 7000000;
-    private int popCutoff = 0; //Lose once our population reaches this number.
+    [HideInInspector]
+    public int popCutoff = 0; //Lose once our population reaches this number.
 
     string popRandomNum = string.Empty;
 
@@ -93,6 +101,7 @@ public class WorldManager : MonoBehaviour {
         {
             Debug.Log("<color=yellow>Winner!</color>");
             winGO.SetActive(true);
+            win = true;
 
             GetComponent<Rigidbody2D>().drag = 25;
             GetComponent<Rigidbody2D>().angularDrag = 25;
@@ -134,6 +143,8 @@ public class WorldManager : MonoBehaviour {
                 if (pop <= popCutoff)
                 {
                     pop = popCutoff;
+                    populationCounterText.text = "0";
+                    lose = true;
                     Debug.Log("<color=red>GAME OVER! ALL CITIZENS ARE DEAD!</color>");
                     loseGO.SetActive(true);
                 }
