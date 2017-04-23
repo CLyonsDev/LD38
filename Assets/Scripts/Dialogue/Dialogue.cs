@@ -25,7 +25,7 @@ public class Dialogue : MonoBehaviour {
     private float normalCharacterDelay = 0.025f;
     private float fastCharacterDelay = 0.005f;
     private float autoAdvanceCharacterDelay = 0.04f;
-    private float autoAdvanceDelay = 0.5f;
+    private float autoAdvanceDelay = 0.85f;
 
     public int index = 0;
 

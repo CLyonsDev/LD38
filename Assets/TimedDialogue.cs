@@ -46,7 +46,7 @@ public class TimedDialogue : MonoBehaviour {
         {
             Debug.Log("Dialogue");
             smashDialogueSaid = true;
-            dialogue.StartDialogue(12, false);
+            dialogue.StartDialogue(12, true);
         }
 
         if (world.win && !winDialogueSaid)
