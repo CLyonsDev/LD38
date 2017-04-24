@@ -8,6 +8,7 @@ public class CollectAsteroids : MonoBehaviour {
     public int size = 0;
 
     public int winSize = 1;
+    public int secretWinSize = 1;
     public int loseSize = -1;
 
     private float collectDelay = 0.075f;
@@ -22,6 +23,8 @@ public class CollectAsteroids : MonoBehaviour {
     private float zoomLerpSpeed = 2.5f;
 
     public GameObject collisionParticleSystemGO;
+
+    public AudioClip[] sounds;
 
     void Start()
     {
@@ -45,6 +48,13 @@ public class CollectAsteroids : MonoBehaviour {
         //targetCamZoomSize += ((float)amount / 55f);
         targetCamZoomSize += ((float)asteroid.GetComponent<Asteroid>().objectSize / 300);
 
+        if(asteroid.transform.tag == "Sun" && size >= secretWinSize)
+        {
+            //Hoooo boy you've really done it now.
+            GetComponent<WorldManager>().SECRETWIN = true;
+            Debug.Log("<color=orange>SECRET WIN ACHIEVED</color>");
+        }
+
         if (worldCollided)
             StartCoroutine(CollectObject(asteroid, collectDelay));
         else
@@ -65,15 +75,15 @@ public class CollectAsteroids : MonoBehaviour {
     {
         GetComponent<WorldManager>().pop -= popLostOnCollect;
 
-        o.GetComponent<Rigidbody2D>().velocity = Vector2.zero;
+        Rigidbody2D r = o.GetComponent<Rigidbody2D>();
+
+        r.velocity = Vector2.zero;
 
         yield return new WaitForSeconds(delay);
-
-        o.GetComponent<Asteroid>().collected = true;
-        o.GetComponent<Rigidbody2D>().angularDrag = 50;
-        o.GetComponent<Rigidbody2D>().drag = 50;
-        o.GetComponent<Rigidbody2D>().isKinematic = true;
-        o.transform.SetParent(this.transform, true);
+        
+        r.GetComponent<Asteroid>().collected = true;
+        r.GetComponent<Rigidbody2D>().isKinematic = true;
+        r.transform.SetParent(this.transform, true);
     }
 
     public void SpawnCollisionParticles(bool worldCollide, Vector3 pos)
@@ -94,6 +104,8 @@ public class CollectAsteroids : MonoBehaviour {
 
     void OnCollisionEnter2D(Collision2D col)
     {
+        SoundManager._Instance.PlaySound(sounds[Random.Range(0, sounds.Length)], col.contacts[0].point, 0.05f, false);
+
         cam.transform.GetComponent<CameraShake>().StartShake(0, 0.075f, 0.3f, 0.075f);
         SpawnCollisionParticles(true, col.contacts[0].point);
 

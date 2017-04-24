@@ -36,6 +36,7 @@ public class Dialogue : MonoBehaviour {
     public Text charNameTextZone;
     public Text continueText;
     public Image portrait;
+    public AudioClip typingSound;
 
     private bool endOfLine = false;
     private bool finishedTyping = false;
@@ -68,7 +69,7 @@ public class Dialogue : MonoBehaviour {
 	void Update () {
         if (finishedTyping)
         {
-            if(!autoAdvance)
+            if (!autoAdvance)
                 continueText.enabled = true;
 
             if (Input.anyKeyDown && !autoAdvance)
@@ -76,12 +77,16 @@ public class Dialogue : MonoBehaviour {
                 if (endOfLine)
                 {
                     convoInProgress = false;
+                    Cursor.visible = true;
                     dialogueContainer.SetActive(false);
                     TimeManager._timeManager.Unpause();
 
-                    if(world.win || world.lose)
+                    if(world.win)
                     {
-                        SceneManager.LoadScene(0);
+                        world.Win();
+                    }else if(world.lose)
+                    {
+                        world.Lose();
                     }
                 }
                 else
@@ -134,11 +139,13 @@ public class Dialogue : MonoBehaviour {
 
         if(!autoadvance)
         {
+            Cursor.visible = false;
             characterDelay = normalCharacterDelay;
             TimeManager._timeManager.Pause();
         }
         else
         {
+            Cursor.visible = true;
             characterDelay = autoAdvanceCharacterDelay;
         }
 
@@ -197,6 +204,7 @@ public class Dialogue : MonoBehaviour {
             //Debug.Log("Typing a char.");
             line += chars[i];
             dialogueTextZone.text = line.ToString();
+            SoundManager._Instance.PlaySound(typingSound, Camera.main.transform.position, 0.15f, true);
             yield return new WaitForSeconds(characterDelay);
         }
 

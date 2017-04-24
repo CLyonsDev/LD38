@@ -13,6 +13,6 @@ public class MenuThrusterRotation : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-        transform.RotateAround(transform.parent.position, transform.forward, Mathf.Sin(Time.time) * modifier);
+        transform.RotateAround(transform.parent.position, transform.forward, Mathf.Sin(Time.timeSinceLevelLoad) * modifier);
 	}
 }

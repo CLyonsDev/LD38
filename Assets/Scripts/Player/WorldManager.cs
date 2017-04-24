@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class WorldManager : MonoBehaviour {
@@ -23,6 +24,9 @@ public class WorldManager : MonoBehaviour {
     public bool lose = false;
     [HideInInspector]
     public bool SECRETWIN = false;
+
+    public bool winShown = false;
+    private bool SECRETWINSHOWN = false;
 
     [HideInInspector]
     public int pop = 7000000;
@@ -67,6 +71,26 @@ public class WorldManager : MonoBehaviour {
 
         UpdateLosses(temperature);
         CheckIfWin();
+
+        if(Input.GetKeyDown(KeyCode.O))
+        {
+            SECRETWIN = true;
+        }
+    }
+
+    public void Restart()
+    {
+        SceneManager.LoadScene(1);
+    }
+
+    public void ReturnToMenu()
+    {
+        SceneManager.LoadScene(0);
+    }
+
+    public void ContinuePlaying()
+    {
+        lossRate = 999;
     }
 
     private void UpdateLosses(float temp)
@@ -90,6 +114,15 @@ public class WorldManager : MonoBehaviour {
 
     private void CheckIfWin()
     {
+        if(SECRETWIN && !SECRETWINSHOWN)
+        {
+            SECRETWINSHOWN = true;
+            GetComponent<SecretWin>().StartSecretWin();
+        }
+
+        if (win || lose)
+            return;
+
         //Debug.Log("checkifwin");
         CollectAsteroids a = GetComponent<CollectAsteroids>();
         if(a.size >= a.winSize)
@@ -99,13 +132,35 @@ public class WorldManager : MonoBehaviour {
 
         if(inGoldilocksZone && hasEnoughSize && rb.velocity.magnitude <= 1f)
         {
+            win = true;
+            //GetComponent<Rigidbody2D>().drag = 25;
+            //GetComponent<Rigidbody2D>().angularDrag = 25;
+        }
+
+        if (pop <= popCutoff)
+        {
+            pop = popCutoff;
+            populationCounterText.text = "0";
+            lose = true;
+        }
+    }
+
+    public void Win()
+    {
+        if(!winShown)
+        {
             Debug.Log("<color=yellow>Winner!</color>");
             winGO.SetActive(true);
-            win = true;
+            winShown = true;
+            TimeManager._timeManager.Pause();
+        }     
+    }
 
-            GetComponent<Rigidbody2D>().drag = 25;
-            GetComponent<Rigidbody2D>().angularDrag = 25;
-        }
+    public void Lose()
+    {
+        Debug.Log("<color=red>GAME OVER! ALL CITIZENS ARE DEAD!</color>");
+        loseGO.SetActive(true);
+        TimeManager._timeManager.Pause();
     }
 
     private void UpdateTemperature()
@@ -139,15 +194,6 @@ public class WorldManager : MonoBehaviour {
                 }
 
                 pop -= currentLossAmt;
-
-                if (pop <= popCutoff)
-                {
-                    pop = popCutoff;
-                    populationCounterText.text = "0";
-                    lose = true;
-                    Debug.Log("<color=red>GAME OVER! ALL CITIZENS ARE DEAD!</color>");
-                    loseGO.SetActive(true);
-                }
             }
             yield return new WaitForSeconds(lossRate);
         }

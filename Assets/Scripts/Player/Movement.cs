@@ -27,6 +27,8 @@ public class Movement : MonoBehaviour {
     private bool charging = false;
     private bool up = true;
 
+    public AudioClip[] fireClips;
+
 
 	// Use this for initialization
 	void Start () {
@@ -98,5 +100,7 @@ public class Movement : MonoBehaviour {
         {
             ps.Play();
         }
+
+        SoundManager._Instance.PlaySound(fireClips[Random.Range(0, fireClips.Length)], transform.position, 0.1f, false);
     }
 }
